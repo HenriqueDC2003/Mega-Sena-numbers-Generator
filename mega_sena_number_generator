@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisador Interativo da Mega Sena com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF7;
+            color: #333333;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #6B8A7A;
+            color: #4A6D7C;
+            font-weight: 600;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .lotto-ball {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+            margin: 5px;
+            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.3);
+        }
+        .gemini-loading, .gemini-error {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .gemini-loading {
+            background-color: #e0f2fe;
+            color: #0c4a6e;
+        }
+        .gemini-error {
+            background-color: #ffe4e6;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#4A6D7C] mb-2">Analisador Interativo da Mega Sena com IA ✨</h1>
+            <p class="text-lg text-gray-600">Explorando Probabilidades, Dados, Mitos e a Magia dos Sonhos com IA</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center border-b border-gray-200 mb-8">
+            <button class="tab-button active py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="desafio">O Desafio</button>
+            <button class="tab-button py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="analise">Analisando o Passado</button>
+            <button class="tab-button py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="mitos">Mitos e "Sistemas"</button>
+            <button class="tab-button py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="veredicto">O Veredito da Ciência</button>
+            <button class="tab-button py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="gerador">Gerador de Apostas</button>
+            <button class="tab-button py-4 px-6 block hover:text-[#4A6D7C] focus:outline-none" data-tab="sonhos">Sonhos da Sorte ✨</button>
+        </nav>
+
+        <main>
+            <section id="desafio" class="content-section active text-center p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-[#4A6D7C] mb-4">Qual a sua chance real de ganhar?</h2>
+                <p class="text-gray-700 mb-6 max-w-3xl mx-auto">Antes de explorarmos qualquer estratégia, é fundamental entender o tamanho do desafio. Para uma aposta simples de 6 dezenas, a probabilidade de acertar o prêmio principal da Mega Sena é uma das mais remotas em loterias globais. Este número define o campo de jogo e coloca todas as "estratégias" em perspectiva.</p>
+                <div class="bg-[#A7C9B8] bg-opacity-30 p-8 rounded-lg">
+                    <p class="text-lg text-gray-800">Sua chance é de 1 em</p>
+                    <p id="odds-counter" class="text-5xl md:text-7xl font-bold text-[#6B8A7A] my-4">50,063,860</p>
+                    <p class="text-gray-600">Para se ter uma ideia, é mais provável ser atingido por um raio (1 em 1 milhão) do que ganhar na Mega Sena com uma aposta simples.</p>
+                </div>
+            </section>
+
+            <section id="analise" class="content-section p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-center text-[#4A6D7C] mb-4">Analisando os Resultados Históricos</h2>
+                <p class="text-gray-700 mb-8 max-w-3xl mx-auto text-center">A análise de dados passados é a base da maioria das "estratégias". Aqui, você pode explorar interativamente as características dos sorteios históricos da Mega Sena. Veja quais dezenas foram mais ou menos frequentes e como as combinações de pares/ímpares e a soma das dezenas se distribuíram ao longo do tempo. Lembre-se: esta é uma fotografia do passado, não uma previsão do futuro.</p>
+                
+                <div class="bg-gray-50 p-6 rounded-lg mb-8">
+                    <h3 class="text-xl font-semibold text-center mb-4">Frequência das Dezenas</h3>
+                    <p class="text-center text-gray-600 mb-4">Este gráfico mostra quantas vezes cada dezena (de 1 a 60) já foi sorteada. Use os botões para ver as dezenas "quentes" (mais sorteadas) e "frias" (menos sorteadas).</p>
+                    <div class="text-center mb-4">
+                        <button id="sortHot" class="bg-[#6B8A7A] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition">Mais Frequentes</button>
+                        <button id="sortCold" class="bg-[#A7C9B8] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition">Menos Frequentes</button>
+                        <button id="sortNatural" class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition">Ordem Numérica</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="frequencyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mt-8">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-center mb-4">Distribuição de Pares e Ímpares</h3>
+                        <p class="text-center text-gray-600 mb-4">Como os resultados se dividem entre números pares e ímpares? A combinação mais comum é um equilíbrio entre os dois.</p>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="evenOddChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-center mb-4">Distribuição da Soma das Dezenas</h3>
+                        <p class="text-center text-gray-600 mb-4">A soma das seis dezenas sorteadas tende a se concentrar em uma faixa central, já que somas muito baixas ou muito altas são combinatoriamente mais raras.</p>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="sumChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mitos" class="content-section p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-center text-[#4A6D7C] mb-4">Desvendando Mitos e "Sistemas"</h2>
+                <p class="text-gray-700 mb-8 max-w-3xl mx-auto text-center">Muitos apostadores recorrem a "sistemas" ou se baseiam em crenças para escolher seus números. Nesta seção, analisamos criticamente algumas das ideias mais populares, desde vieses cognitivos comuns até métodos mais elaborados. O objetivo é entender a lógica por trás deles e por que não oferecem uma vantagem real em um jogo de puro acaso.</p>
+                <div class="space-y-8">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-[#6B8A7A]">🧠 A Falácia do Apostador</h3>
+                        <p class="text-gray-700 mt-2">É a crença de que, se um evento aleatório aconteceu com menos frequência no passado, ele se torna mais provável de acontecer no futuro (ou vice-versa). Em loterias, isso se traduz em apostar em números "atrasados" (que não saem há muito tempo) por acreditar que eles estão "prestes a sair".</p>
+                        <p class="mt-2 text-sm font-semibold text-red-600">Realidade: Cada sorteio é independente. Uma bolinha não "sabe" que não foi sorteada há muito tempo. A probabilidade de qualquer dezena ser sorteada é sempre a mesma em cada novo concurso.</p>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-[#6B8A7A]">🎲 Ilusão de Controle</h3>
+                        <p class="text-gray-700 mt-2">É a tendência humana de superestimar a própria capacidade de controlar eventos que, na verdade, são determinados pelo acaso. Escolher os próprios números, pesquisar estatísticas e usar algoritmos pode criar uma falsa sensação de que estamos influenciando o resultado, quando na verdade estamos apenas escolhendo uma entre 50 milhões de combinações.</p>
+                        <p class="mt-2 text-sm font-semibold text-red-600">Realidade: A sua escolha pessoal de números tem exatamente a mesma chance de ganhar que uma "Surpresinha" (seleção aleatória do sistema).</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="veredicto" class="content-section p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-center text-[#4A6D7C] mb-4">O Veredito da Ciência</h2>
+                <p class="text-gray-700 mb-8 max-w-3xl mx-auto text-center">Após analisar os dados, os mitos e os algoritmos, a conclusão da estatística e da teoria das probabilidades é clara e unânime. Entender estes pontos é fundamental para ter uma perspectiva realista sobre a Mega Sena e qualquer outro jogo de puro azar.</p>
+                <div class="space-y-6 max-w-3xl mx-auto">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-[#6B8A7A]">🎲🎲</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Eventos Independentes</h3>
+                            <p class="text-gray-700">O resultado de um sorteio da Mega Sena não tem absolutamente nenhuma influência sobre os sorteios futuros. As bolinhas não têm memória. A frequência passada não altera a probabilidade futura. Cada concurso é um novo começo, com as mesmas probabilidades de sempre.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-[#6B8A7A]">🛡️</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Aleatoriedade Garantida</h3>
+                            <p class="text-gray-700">A Caixa Econômica Federal emprega procedimentos rigorosos para garantir a aleatoriedade dos sorteios. As bolinhas têm o mesmo peso e tamanho, são verificadas pelo INMETRO, e os sorteios são públicos e auditados. O sistema é projetado para ser imprevisível.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-[#6B8A7A]">📊</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Análise Descritiva vs. Previsão Preditiva</h3>
+                            <p class="text-gray-700">Analisar dados passados é um exercício de estatística *descritiva*. Ele nos conta o que *já aconteceu*. Tentar usar esses dados para prever o futuro é estatística *preditiva*, que não se aplica a sistemas aleatórios e independentes. Os padrões encontrados no passado são apenas o retrato da aleatoriedade, não um código para decifrar o futuro.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-8 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded-lg">
+                    <p><strong class="font-bold">Conclusão Final:</strong> Nenhum algoritmo, por mais complexo que seja, pode prever os resultados de uma loteria justa. O único "segredo" é a sorte. Jogar com responsabilidade significa entender que é uma forma de entretenimento com uma chance extremamente pequena de um grande prêmio, não um investimento.</p>
+                </div>
+            </section>
+            
+            <section id="gerador" class="content-section p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-center text-[#4A6D7C] mb-4">Gerador de Apostas</h2>
+                <p class="text-gray-700 mb-8 max-w-3xl mx-auto text-center">Agora que você explorou a teoria, vamos à prática. Este gerador pode criar uma sugestão de aposta de duas maneiras. Você pode testar os conceitos discutidos e ver por si mesmo como as diferentes abordagens geram seus resultados.</p>
+                
+                <div class="max-w-md mx-auto bg-gray-50 p-6 rounded-lg">
+                    <div class="mb-4">
+                        <p class="font-semibold mb-2">Escolha o método de geração:</p>
+                        <div class="flex flex-col space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="generationMethod" value="random" class="form-radio text-[#6B8A7A]" checked>
+                                <span class="ml-2">Aleatoriedade Pura</span>
+                            </label>
+                             <p class="text-sm text-gray-500 ml-6">Cada dezena tem exatamente a mesma chance de ser escolhida. Equivalente à "Surpresinha".</p>
+                            <label class="flex items-center">
+                                <input type="radio" name="generationMethod" value="weighted" class="form-radio text-[#6B8A7A]">
+                                <span class="ml-2">Ponderado por Frequência Histórica</span>
+                            </label>
+                             <p class="text-sm text-gray-500 ml-6">Dezenas que saíram mais vezes no passado têm uma chance ligeiramente maior de serem escolhidas por este gerador.</p>
+                        </div>
+                    </div>
+                    
+                    <button id="generateButton" class="w-full bg-[#6B8A7A] text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all">
+                        Gerar Meus Números
+                    </button>
+                    
+                    <div id="generatedNumbersContainer" class="mt-6 text-center">
+                        <div id="generatedNumbers" class="mb-2">
+                           <p class="text-gray-500">Seus números da sorte aparecerão aqui...</p>
+                        </div>
+                        <button id="nameGameButton" class="hidden bg-[#4A6D7C] text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition mt-4">✨ Nomear Jogo</button>
+                        <div id="gameNameResult" class="mt-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sonhos" class="content-section p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-center text-[#4A6D7C] mb-4">Sonhos da Sorte ✨</h2>
+                <p class="text-gray-700 mb-6 max-w-3xl mx-auto text-center">Teve um sonho intrigante e acha que ele pode te dar sorte na Mega Sena? Descreva seu sonho abaixo e deixe nossa IA criar uma interpretação divertida e sugerir 6 números para você! Lembre-se, é apenas para entretenimento!</p>
+                <div class="max-w-xl mx-auto bg-gray-50 p-6 rounded-lg">
+                    <textarea id="dreamInput" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:ring-[#6B8A7A] focus:border-[#6B8A7A]" placeholder="Ex: Sonhei que estava voando sobre montanhas douradas com sete pássaros azuis..."></textarea>
+                    <button id="interpretDreamButton" class="w-full mt-4 bg-[#6B8A7A] text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all">
+                        Interpretar Sonho e Gerar Números ✨
+                    </button>
+                    <div id="dreamInterpretationResult" class="mt-6">
+                        <p class="text-gray-500 text-center">A interpretação do seu sonho e os números da sorte aparecerão aqui...</p>
+                    </div>
+                </div>
+                 <p class="text-xs text-gray-500 mt-4 text-center max-w-xl mx-auto">Este recurso usa Inteligência Artificial para gerar interpretações e números de forma lúdica. Não há garantia de acerto. Jogue com responsabilidade.</p>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab-button');
+            const sections = document.querySelectorAll('.content-section');
+            const oddsCounter = document.getElementById('odds-counter');
+
+            const frequencyData = {
+                '10': 318, '53': 311, '05': 299, '23': 294, '34': 293, '04': 291, '42': 291, '33': 290, '37': 288, '41': 288,
+                '51': 286, '30': 284, '54': 284, '17': 282, '44': 282, '28': 281, '35': 281, '13': 280, '24': 280, '56': 280,
+                '16': 279, '29': 279, '38': 278, '43': 278, '02': 277, '11': 277, '27': 276, '32': 276, '49': 275, '52': 275,
+                '58': 275, '08': 274, '36': 273, '45': 273, '50': 273, '60': 273, '06': 272, '18': 271, '59': 271, '01': 269,
+                '07': 269, '03': 268, '20': 268, '25': 268, '31': 267, '12': 266, '14': 266, '46': 265, '57': 264, '09': 263,
+                '39': 261, '40': 261, '47': 259, '19': 258, '22': 252, '48': 251, '15': 249, '55': 248, '26': 242, '21': 227
+            };
+
+            const evenOddData = {
+                labels: ['3 Pares, 3 Ímpares', '2 Pares, 4 Ímpares', '4 Pares, 2 Ímpares', 'Outros'],
+                data: [29.88, 24.94, 24.63, 20.55],
+                colors: ['#6B8A7A', '#A7C9B8', '#4A6D7C', '#BDBDBD']
+            };
+
+            const sumData = {
+                labels: ['Soma entre 121-240', 'Soma entre 101-260 (Total)', 'Outras Faixas'],
+                data: [85.25, 95.43 - 85.25, 100 - 95.43],
+                colors: ['#6B8A7A', '#A7C9B8', '#BDBDBD']
+            };
+
+            let frequencyChartInstance = null;
+            let evenOddChartInstance = null;
+            let sumChartInstance = null;
+            let generatedGameNumbers = [];
+
+            const apiKey = ""; // DEIXE EM BRANCO OU SUBSTITUA PELA SUA CHAVE REAL SE FOR TESTAR FORA DO AMBIENTE RESTRITO
+
+            function switchTab(tab) {
+                sections.forEach(section => section.classList.remove('active'));
+                tabs.forEach(t => t.classList.remove('active'));
+                document.getElementById(tab).classList.add('active');
+                document.querySelector(`[data-tab=${tab}]`).classList.add('active');
+            }
+
+            tabs.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    switchTab(tabName);
+                    if (tabName === 'analise' && !frequencyChartInstance) {
+                        initCharts();
+                    }
+                });
+            });
+
+            function formatNumber(num) {
+                return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')
+            }
+
+            function animateOdds() {
+                if (!oddsCounter) return;
+                let start = 0;
+                const end = 50063860;
+                const duration = 2000;
+                let startTime = null;
+                function animation(currentTime) {
+                    if (startTime === null) startTime = currentTime;
+                    const progress = currentTime - startTime;
+                    const val = Math.min(Math.floor(progress / duration * end), end);
+                    oddsCounter.textContent = formatNumber(val);
+                    if (val < end) {
+                        requestAnimationFrame(animation);
+                    } else {
+                         oddsCounter.textContent = formatNumber(end);
+                    }
+                }
+                requestAnimationFrame(animation);
+            }
+
+            function createFrequencyChart(sortOrder = 'natural') {
+                const ctx = document.getElementById('frequencyChart').getContext('2d');
+                if (frequencyChartInstance) {
+                    frequencyChartInstance.destroy();
+                }
+
+                let sortedData = Object.entries(frequencyData);
+                if (sortOrder === 'hot') {
+                    sortedData.sort((a, b) => b[1] - a[1]);
+                } else if (sortOrder === 'cold') {
+                    sortedData.sort((a, b) => a[1] - b[1]);
+                } else {
+                    sortedData.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+                }
+                
+                const labels = sortedData.map(item => item[0]);
+                const data = sortedData.map(item => item[1]);
+
+                frequencyChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Frequência de Sorteio',
+                            data: data,
+                            backgroundColor: '#A7C9B8',
+                            borderColor: '#6B8A7A',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Nº de Vezes Sorteado'}}, x: {title: {display: true, text: 'Dezena'}}},
+                        plugins: { legend: {display: false}, tooltip: {callbacks: {title: (context) => `Dezena: ${context[0].label}`}}}
+                    }
+                });
+            }
+
+            function createDonutChart(canvasId, chartData) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                return new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{ data: chartData.data, backgroundColor: chartData.colors, hoverOffset: 4 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: {position: 'top'}, tooltip: {callbacks: { label: (context) => `${context.label || ''}: ${context.parsed !== null ? context.parsed.toFixed(2) + '%' : ''}`}}}
+                    }
+                });
+            }
+
+            function initCharts() {
+                if (!frequencyChartInstance) createFrequencyChart();
+                if (!evenOddChartInstance) evenOddChartInstance = createDonutChart('evenOddChart', evenOddData);
+                if (!sumChartInstance) sumChartInstance = createDonutChart('sumChart', sumData);
+            }
+            
+            if (document.getElementById('sortHot')) {
+                document.getElementById('sortHot').addEventListener('click', () => createFrequencyChart('hot'));
+                document.getElementById('sortCold').addEventListener('click', () => createFrequencyChart('cold'));
+                document.getElementById('sortNatural').addEventListener('click', () => createFrequencyChart('natural'));
+            }
+
+
+            function generateRandomNumbers() {
+                const numbers = new Set();
+                while (numbers.size < 6) {
+                    numbers.add(Math.floor(Math.random() * 60) + 1);
+                }
+                return Array.from(numbers).sort((a,b) => a-b);
+            }
+
+            function generateWeightedNumbers() {
+                const weightedPool = [];
+                for (const num in frequencyData) {
+                    const weight = frequencyData[num];
+                    for (let i = 0; i < weight; i++) {
+                        weightedPool.push(parseInt(num));
+                    }
+                }
+                const numbers = new Set();
+                while (numbers.size < 6) {
+                    const randomIndex = Math.floor(Math.random() * weightedPool.length);
+                    numbers.add(weightedPool[randomIndex]);
+                }
+                return Array.from(numbers).sort((a,b) => a-b);
+            }
+            
+            function displayNumbers(numbersArray, containerElement) {
+                containerElement.innerHTML = '';
+                const colors = ['#6B8A7A', '#4A6D7C', '#8A6B7A', '#7A8A6B', '#6B7A8A', '#8A7A6B'];
+                numbersArray.forEach((num, index) => {
+                    const ball = document.createElement('div');
+                    ball.className = 'lotto-ball';
+                    ball.textContent = num.toString().padStart(2, '0');
+                    ball.style.backgroundColor = colors[index % colors.length];
+                    containerElement.appendChild(ball);
+                });
+            }
+
+            if (document.getElementById('generateButton')) {
+                document.getElementById('generateButton').addEventListener('click', () => {
+                    const method = document.querySelector('input[name="generationMethod"]:checked').value;
+                    if (method === 'random') {
+                        generatedGameNumbers = generateRandomNumbers();
+                    } else {
+                        generatedGameNumbers = generateWeightedNumbers();
+                    }
+                    
+                    const numbersDisplayContainer = document.getElementById('generatedNumbers');
+                    displayNumbers(generatedGameNumbers, numbersDisplayContainer);
+                    
+                    document.getElementById('nameGameButton').classList.remove('hidden');
+                    document.getElementById('gameNameResult').innerHTML = ''; 
+                });
+            }
+
+            async function callGeminiAPI(prompt, schema, resultElementId, loadingMessage) {
+                const resultContainer = document.getElementById(resultElementId);
+                resultContainer.innerHTML = `<div class="gemini-loading">${loadingMessage}</div>`;
+
+                if (!apiKey) {
+                     resultContainer.innerHTML = `<div class="gemini-error">A chave da API Gemini não foi configurada. Funcionalidade de IA indisponível.</div>`;
+                     return null;
+                }
+
+                try {
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: schema,
+                            temperature: 0.7, 
+                            topP: 0.9, 
+                            topK: 40 
+                        }
+                    };
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error (${response.status}): ${errorData.error?.message || 'Erro desconhecido'}`);
+                    }
+                    
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0 &&
+                        result.candidates[0].content.parts[0].text) {
+                        const rawJson = result.candidates[0].content.parts[0].text;
+                        return JSON.parse(rawJson);
+                    } else {
+                        console.warn("Resposta da API com estrutura inesperada:", result);
+                        throw new Error("Resposta da API inválida ou vazia. Verifique o console para detalhes.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao chamar API Gemini:", error);
+                    resultContainer.innerHTML = `<div class="gemini-error">Desculpe, ocorreu um erro ao processar sua solicitação: ${error.message}. Tente novamente. (Verifique se a chave da API é válida e se o modelo está acessível)</div>`;
+                    return null;
+                }
+            }
+
+            if (document.getElementById('nameGameButton')) {
+                document.getElementById('nameGameButton').addEventListener('click', async () => {
+                    if (generatedGameNumbers.length < 6) {
+                        document.getElementById('gameNameResult').innerHTML = `<div class="gemini-error">Por favor, gere os números primeiro.</div>`;
+                        return;
+                    }
+                    const prompt = `Você é um gerador de nomes criativos e divertidos para jogos de loteria. Os números da sorte de um usuário são: ${generatedGameNumbers.join(', ')}. Sugira um nome curto, positivo e memorável para este jogo. Formate sua resposta como JSON com a chave "nomeDoJogo" (string).`;
+                    const schema = { type: "OBJECT", properties: { "nomeDoJogo": { "type": "STRING" } }, required: ["nomeDoJogo"] };
+                    
+                    const result = await callGeminiAPI(prompt, schema, 'gameNameResult', '✨ Gerando um nome criativo para o seu jogo...');
+                    
+                    if (result && result.nomeDoJogo) {
+                        document.getElementById('gameNameResult').innerHTML = `<p class="text-lg font-semibold text-[#4A6D7C]">${result.nomeDoJogo}</p>`;
+                    }
+                });
+            }
+
+            if (document.getElementById('interpretDreamButton')) {
+                document.getElementById('interpretDreamButton').addEventListener('click', async () => {
+                    const dreamText = document.getElementById('dreamInput').value;
+                    if (!dreamText.trim()) {
+                        document.getElementById('dreamInterpretationResult').innerHTML = `<div class="gemini-error">Por favor, descreva seu sonho.</div>`;
+                        return;
+                    }
+
+                    const prompt = `Você é um divertido 'interpretador de sonhos' para a loteria. Um usuário teve o seguinte sonho: "${dreamText}". Com base neste sonho, sugira 6 números da sorte únicos entre 1 e 60 para a Mega Sena e uma breve e divertida 'interpretação' do sonho que justifique esses números. Formate sua resposta como JSON com as chaves "interpretacao" (string) e "numeros" (array de 6 números inteiros, únicos, ordenados crescentemente, entre 1 e 60). Não prometa que os números vão ganhar, é apenas para diversão. Seja criativo e lúdico.`;
+                    const schema = {
+                        type: "OBJECT",
+                        properties: {
+                            "interpretacao": { "type": "STRING" },
+                            "numeros": {
+                                "type": "ARRAY",
+                                "items": { "type": "NUMBER", "minimum": 1, "maximum": 60 },
+                                "minItems": 6,
+                                "maxItems": 6,
+                                "uniqueItems": true
+                            }
+                        },
+                        required: ["interpretacao", "numeros"]
+                    };
+
+                    const result = await callGeminiAPI(prompt, schema, 'dreamInterpretationResult', '✨ Interpretando seu sonho e buscando números da sorte...');
+
+                    if (result && result.interpretacao && Array.isArray(result.numeros) && result.numeros.length === 6) {
+                        const interpretationDiv = document.createElement('div');
+                        interpretationDiv.innerHTML = `<p class="mb-3 italic">"${result.interpretacao}"</p><p class="font-semibold mb-2">Seus números da sorte sonhados:</p>`;
+                        
+                        const numbersContainer = document.createElement('div');
+                        numbersContainer.className = 'text-center';
+                        
+                        const validatedNumbers = result.numeros
+                            .filter(n => Number.isInteger(n) && n >= 1 && n <= 60)
+                            .slice(0, 6);
+                        
+                        if (validatedNumbers.length < 6) {
+                             document.getElementById('dreamInterpretationResult').innerHTML = `<div class="gemini-error">A IA retornou números inválidos. Tente novamente.</div>`;
+                             return;
+                        }
+
+                        displayNumbers(validatedNumbers.sort((a,b) => a-b), numbersContainer);
+                        
+                        const resultContainer = document.getElementById('dreamInterpretationResult');
+                        resultContainer.innerHTML = '';
+                        resultContainer.appendChild(interpretationDiv);
+                        resultContainer.appendChild(numbersContainer);
+                    } else {
+                         document.getElementById('dreamInterpretationResult').innerHTML = `<div class="gemini-error">A IA não conseguiu gerar uma resposta completa ou válida. Tente novamente ou reformule seu sonho.</div>`;
+                    }
+                });
+            }
+            
+            animateOdds();
+            if (document.querySelector('.tab-button.active').getAttribute('data-tab') === 'analise') {
+                initCharts();
+            }
+        });
+    </script>
+</body>
+</html>
